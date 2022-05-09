@@ -1,6 +1,5 @@
 // Import and require mysql2
 const mysql = require('mysql2/promise');
-const mysqll = require('mysql2');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 
@@ -142,11 +141,10 @@ const init = async () => {
                     const updateEmployeeQuestions = [
                         {
                             type: 'list',
-                            name: 'first_name',
-                            message: 'Which employee would you like to update?',
-                            choices: employees.map(({ id, first_name }) => ({
-                                name: first_name,
-                                value: id
+                            name: 'id',
+                            message: 'Which employee id would you like to update?',
+                            choices: employees.map(({ id }) => ({
+                                name: id,
                             }))
                         },
                         {
@@ -156,7 +154,7 @@ const init = async () => {
                         }
                     ];
                     const updatedEmployee = await inquirer.prompt(updateEmployeeQuestions);
-                    await db.query("UPDATE allemployees WHERE first_name = ? SET role_id = ?", updatedEmployee);
+                    await db.query(`UPDATE allemployees SET role_id = ?`, updatedEmployee);
                     break;
                 }
                 default:
