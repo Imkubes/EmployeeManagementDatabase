@@ -1,5 +1,6 @@
 // Import and require mysql2
 const mysql = require('mysql2/promise');
+const mysqll = require('mysql2');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 
@@ -96,58 +97,70 @@ const init = async () => {
                     await db.query("INSERT INTO roles SET ?", newRole);
                     break;
                 }
+                case Actions.ADD_EMPLOYEE: {
+
+                    const [roles] = await db.query('SELECT * FROM roles');
+                    const [employees] = await db.query('SELECT * FROM allemployees');
+
+                    const addEmployeeQuestions = [
+                        {
+                            type: 'input',
+                            name: 'first_name',
+                            message: 'What is the first name of the employee you are adding?'
+                        },
+                        {
+                            type: 'input',
+                            name: 'last_name',
+                            message: 'What is the last name of the employee you are adding?'
+                        },
+                        {
+                            type: 'list',
+                            name: 'role_id',
+                            message: 'What is the role id of the employee you are adding?',
+                            choices: roles.map(({ id, job_title }) => ({
+                                name: job_title,
+                                value: id
+                            }))
+                        },
+                        {
+                            type: 'list',
+                            name: 'manager_ID',
+                            message: 'What is the manager id of the employee you are adding?',
+                            choices: employees.map(({ id, manager_id }) => ({
+                                name: manager_id,
+                                value: id
+                            }))
+                        }
+                    ];
+                    const newEmployee = await inquirer.prompt(addEmployeeQuestions);
+                    await db.query("INSERT INTO allemployees SET ?", newEmployee);
+                    break;
+                }
+                case Actions.UPDATE_EMPLOYEE: {
+                    const [employees] = await db.query('SELECT * FROM allemployees');
+
+                    const updateEmployeeQuestions = [
+                        {
+                            type: 'list',
+                            name: 'first_name',
+                            message: 'Which employee would you like to update?',
+                            choices: employees.map(({ id, first_name }) => ({
+                                name: first_name,
+                                value: id
+                            }))
+                        },
+                        {
+                            type: 'number',
+                            name: 'role_id',
+                            message: "What is the new employee's role?"
+                        }
+                    ];
+                    const updatedEmployee = await inquirer.prompt(updateEmployeeQuestions);
+                    await db.query("UPDATE allemployees WHERE first_name = ? SET role_id = ?", updatedEmployee);
+                    break;
+                }
                 default:
                     console.log("Not implemented");
-            }
-
-            if (action === Actions.ADD_EMPLOYEE) {
-                const addEmployee = await inquirer.prompt(
-                    {
-                        type: 'input',
-                        name: 'first_name',
-                        message: 'Please enter the first name of the employee you are adding.'
-                    },
-                    {
-                        type: 'input',
-                        name: 'last_name',
-                        message: 'Please enter the last name of the employee you are adding.'
-                    },
-                    {
-                        type: 'number',
-                        name: 'role_id',
-                        message: 'Please enter the role id of the employee you are adding'
-                    },
-                    {
-                        type: 'input',
-                        name: 'manager_id',
-                        message: 'Please enter the corresponding manager id for the new employee, use NULL if N/A'
-                    },
-                )
-            }
-
-            if (action === Actions.UPDATE_EMPLOYEE) {
-                const updEmployee = await inquirer.prompt(
-                    {
-                        type: 'input',
-                        name: 'updateEmployeeFirstName',
-                        message: 'What is the first name of the employee you are updating?',
-                    },
-                    {
-                        type: 'input',
-                        name: 'updateEmployeeLastName',
-                        message: 'What is the last name of the employee you are updating?',
-                    },
-                    {
-                        type: 'number',
-                        name: 'updateEmployeeRoleID',
-                        message: 'What is the role id of the employee you are updating?',
-                    },
-                    {
-                        type: 'input',
-                        name: 'updateEmployeeManagerID',
-                        message: 'What is the manager id of the employee you are updating?',
-                    },
-                )
             }
 
             if (action === Actions.EXIT) {
@@ -159,6 +172,5 @@ const init = async () => {
         console.log(err);
     }
 };
-
 
 init();
